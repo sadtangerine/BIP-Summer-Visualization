@@ -1,5 +1,5 @@
 # BIP-Summer-Visualization
-Materials for the Black in Psych (BIP) Summer Data Visualization Series in R
+Materials for the Black in Psych (BIP) Summer Data Visualization Series in R.  This workshop is designed for beginners looking to explore the fundamentals of data visualization using R
 
 July 9th workshop: "R you Ready? Visualizing Data with R (Introl Level)"
 - Slides
