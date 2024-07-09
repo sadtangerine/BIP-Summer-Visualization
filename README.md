@@ -11,4 +11,5 @@ July 23rd workshop:
 
 Additional Resources:  
 [The R Graph Gallery](https://r-graph-gallery.com/)  
-[R Color Palette Finder](https://r-graph-gallery.com/color-palette-finder)
+[R Color Palette Finder](https://r-graph-gallery.com/color-palette-finder)  
+[Theme() GGplot](https://ggplot2.tidyverse.org/reference/theme.html)
