@@ -1,0 +1,274 @@
+---
+title: "R you Ready ? Visualizing in R Practice"
+subtitle: "ggplot Basics"
+output: 
+  html_document:
+      toc: true
+      toc_float: true
+---
+
+## Overview
+
+This worksheet is meant to serve as a worksheet to practice using ggplot following the grammar of graphics structure. If you have any questions, please feel free to contact Ketura Elie at ane48@pitt.edu. 
+
+
+```{r document_setup, echo=F, message=F, warning=F}
+# This chunk can include things you need for the rest of the document
+library(tidyverse) ## this package includes ggplot and functions for tidy-ing data
+knitr::opts_chunk$set(
+  echo=T, ## show your R code chunk
+  message = F, ## hide the message
+  warning = F, ## hide the warning
+  autodep = T ## make sure your separate code chunks can find the dependencies (from other code chunk)
+)
+```
+
+
+## Iris Dataset
+For this worksheet, you'll be working with the Iris dataset (which is already built into R so nothing to load or read in)
+
+```{r}
+iris %>% glimpse()
+```
+
+## Data Types
+
+First, identify the data type for each variable (there are five).  
+_Hint_: You can use `str()` to display structure of the iris dataset
+
+```{r}
+## insert your code here
+```
+
+
+## Visualizing 2 variables
+
+### Basic Plot
+
+Create a basic scatter plot with `Sepal.Length` on the x-axis and `Sepal.Width` on the y-axis. The code has been started for you. Include the appropriate mapping the in the parent call and choose the appropriate geom to create the scatter plot.
+
+```{r, eval=FALSE}
+## CHANGE eval to equal TRUE when you complete the code!
+## This code has been started for you
+irsi %>% 
+    ggplot()
+```
+
+### Color
+
+Now change the color of the points to blue.
+
+```{r}
+## insert your code here
+```
+
+
+Now change the color of the points to pink.
+
+```{r}
+## insert your code here
+```
+
+
+Now we'll be working with `aes()` within  the geom call. Use `aes()` within the appropriate layer to map color the `Sepal.Length` variable.
+
+```{r}
+## insert your code here
+```
+
+_Does this change the information communicated in the plot compared to hard coding the color of the points? _
+
+ Use `aes()` within the appropriate layer to map color the `Sepal.Width` variable.  
+ 
+### Size and Opacity
+ 
+Now change the size of the points to 3.5 and the opacity (or transparency) of the points to .75!  
+_Hint_: Think about what we are changing about our plot (the geom) to determine which layer `size` and `alpha` should be in.  
+
+```{r}
+## insert your code here
+```
+
+
+Now map the size of the points to `Sepal.Width` and the opacity to `Sepal.Length`
+
+```{r}
+## insert your code here
+```
+
+
+We don't know any other variables, only see 2 that we are plotting.  
+
+What is general relationship between these two variables?
+
+
+## Visualizing 3 Variables
+
+Let's see if the relationship you described between `Sepal.Length` and `Sepal.Width` changes by adding another variable to our visualization.
+
+Remember that how we visualize variables depends on the variable type. Our third variable will be `Species`. 
+
+1. What is the variable type for `Species`?  
+
+
+2. Base on the variable type, what aesthetic would be the most appropriate to use to visualize `Species`?   
+
+
+Create a plot visualizing all 3 variables! `Sepal.Length` on the x-axis, `Sepal.Width` on the y-axis, and `Species` as the aesthetic you listed in question 2.
+
+```{r}
+## insert your code here
+```
+
+
+How would you describe the relationship between `Sepal.Length` and `Sepal.Width` now that `Species` is included?
+
+
+## Visualizing Trends
+
+The final portion of this worksheet briefly covers visualizing trends (aka statistical relationships)
+
+### 2 variables
+
+Run the code chunk to show relationship between `Sepal.Length` and `Sepal.Width`
+
+```{r}
+iris %>% 
+    ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+    geom_point() +
+    geom_smooth(formula = y ~ x,
+                method = lm) +
+    theme_bw()
+```
+
+Here we are using `geom_smooth` to plot a regression line through our scatter plot. We know that it is a regression line from the `method = lm` call (where lm stands for linear model) and from the `formula = y ~ x`, which is standard R code to say we are regression y on x (the `~` (tilda) here means "as a function of").
+
+Similar to other geoms, we can change the aesthetics of the this line manually (or hard-coding).
+
+Let's change the color of the line to yellow!
+
+```{r}
+iris %>% 
+    ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+    geom_point() +
+    geom_smooth(formula = y ~ x,
+                method = lm,
+                color = "yellow") + 
+    theme_bw()
+```
+
+The grey band that you see around the line is the confidence interval of our regression line, and we can change the color of this as well! Since it is a "3D" object, we have to use `fill` as our aesthetic (rather than `color`)
+
+```{r}
+iris %>% 
+    ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+    geom_point() +
+    geom_smooth(formula = y ~ x,
+                method = lm,
+                color = "yellow",
+                fill = "yellow") + 
+    theme_bw()
+```
+
+
+To highlight how visualizations can be bias, let's see the regression line without the data (aka our points) and the confidence interval.
+
+```{r}
+iris %>% 
+    ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+    geom_smooth(formula = y ~ x,
+                method = lm,
+                color = "blue",## changing the color
+                se = FALSE) +  ## and taking away our confidence interval
+    theme_bw()
+```
+
+Looking at just this line, you or your audience might come to a different conclusion about the relationship between these two variables (that it seems like a very straight 1-to-1 linear relationship). However, the only way we know that this figure is misleading is because of our previous plots! (the scatter plot and the plot including a third variable).
+
+So let's create a visualization that is more accurate to our data!
+
+Starting with the basic scatter plot again. 
+
+```{r}
+iris %>% 
+    ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+    geom_point() +
+    theme_bw()
+```
+
+Now let's add our line
+
+```{r}
+iris %>% 
+    ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+    geom_point() +
+    geom_smooth(formula = y~x,
+                method = lm) +
+    theme_bw()
+```
+
+### 3 Variables
+
+We know that `Species` changes how `Sepal.Length` and `Sepal.Width` relate to each other (from our previous plots) so let's map it to the color aesthetic of the points. The code chunk has been started for you.
+
+
+```{r, eval = FALSE}
+## CHANGE eval to equal TRUE once you completed the code
+iris %>% 
+    ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+    geom_point() +
+    geom_smooth(formula = y~x,
+                method = lm) +
+    theme_bw()
+```
+
+
+Similar to other geoms, we can also map the aesthetics `geom_smooth` to a variable. Let's map the color of our regression line to `Species`. _Note_: Still include `Species` mapped to the color aesthetic of the points as well.
+
+The code chunk has been started for you.
+
+```{r, eval=FALSE}
+## CHANGE eval to equal to TRUE once you've completed the code chunk
+iris %>% 
+    ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+    geom_point() +
+    geom_smooth(formula = y~x,
+                method = lm) +
+    theme_bw()
+```
+
+Change the fill of the confidence interval to also be map to the `Species`.  
+
+The code chunk has been started for you.
+
+```{r, eval=FALSE}
+## CHANGE eval to equal to TRUE once you've completed the code chunk
+iris %>% 
+    ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+    geom_point() +
+    geom_smooth(formula = y~x,
+                method = lm) +
+    theme_bw()
+```
+
+
+Finally, let's make the visualization more legible by including facets!. Use `facet_wrap` to show the plot by `Species`.  
+
+The code chunk has been started for you.
+
+```{r, eval=FALSE}
+## CHANGE eval to equal to TRUE once you've completed the code chunk
+iris %>% 
+    ggplot(mapping = aes(x = Sepal.Length, y = Sepal.Width)) +
+    geom_point() +
+    geom_smooth(formula = y~x,
+                method = lm,
+                aes(col = Species)) +
+    ## include your facet code here
+    theme_bw()
+```
+
+Now how would you describe the trend between `Sepal.Length` and `Sepal.Width`.
+
+
+**Author's Note**: I hope this worksheet has been helpful in learning the basic elements of ggplot! Please let me know if you have any questions or feedback at ane48@pitt.edu. We go over the answers to this worksheet at the next workshop, but if you cannot attend, feel free to email me for the answer key. 
