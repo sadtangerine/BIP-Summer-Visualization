@@ -8,5 +8,6 @@ July 9th workshop: "R you Ready? Visualizing Data with R (Introl Level)"
 
 July 23rd workshop:
 
-Additional Resources
-[The R Graph Gallery](https://r-graph-gallery.com/)
+Additional Resources:  
+[The R Graph Gallery](https://r-graph-gallery.com/)  
+[R Color Palette Finder](https://r-graph-gallery.com/color-palette-finder)
