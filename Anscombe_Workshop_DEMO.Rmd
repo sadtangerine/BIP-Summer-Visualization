@@ -1,0 +1,105 @@
+---
+title: "Introduction to Data Visualization"
+author: "Ketura Elie"
+date: "2023-10-24"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, load_packages}
+library(tidyverse)
+```
+
+## Anscombe 
+
+```{r,a_1}
+anscombe %>% glimpse() #not tidy data table, columns contain 2 piece of information
+```
+
+## Tidy 
+
+Tidy the `anscombe` data set.  
+
+```{r, tt_1}
+a_tidy <- anscombe %>% 
+    tibble::rowid_to_column() %>%
+    pivot_longer(cols = !c("rowid")) %>% 
+    tidyr::separate(name,
+                    c("variable","dataset"),
+                    sep = 1) %>% 
+    pivot_wider(names_from='variable',values_from = 'value') %>% 
+    arrange(dataset)
+```
+
+The tidy data long format data 
+
+```{r, tt_2}
+a_tidy %>% glimpse()
+```
+
+
+## Visualization
+
+The 3 major components of any (statistical) figure.  
+ 
+ * data - a table (dataframe)  
+ * aesthetics - what do we want to see (the columns from a table)  
+ * geometric objects - "how" do we want to see the variables  
+ 
+
+
+## Aesthetics
+
+```{r}
+a_tidy %>% 
+    ggplot(mapping = (aes(x=x,y=y))) +
+    geom_point(mapping = aes(alpha = x))
+```
+
+
+Use facets to show the different groups
+
+```{r, tt_3}
+a_tidy %>% 
+    ggplot(aes(x=x,y=y)) +
+    geom_point() +
+    facet_wrap(~dataset, labeller = 'label_both')
+```
+
+
+
+ We can easily map any aesthetic to the `dataset` column.  
+ 
+```{r, tt_4}
+a_tidy %>% 
+    ggplot(aes(x=x,y=y)) +
+    geom_point(aes(color = dataset,
+                   shape = dataset),
+               size = 3.5) +
+    facet_wrap(~dataset, labeller = 'label_both', scales = "free") +
+    theme(legend.position='none')
+```
+ 
+  
+ We can easily add in best fit line with another layer.  
+ 
+```{r, tt_5}
+a_tidy %>% 
+    ggplot(aes(x=x,y=y)) +
+    geom_point(aes(color =dataset,
+                   shape = dataset),
+               size = 3.5) +
+    geom_smooth(method=lm,
+                formula = y ~ x,
+                mapping = aes(color = dataset,
+                               fill = dataset)) +
+    facet_wrap(~dataset, labeller = 'label_both') +
+    labs(title = "Examining Anscombe") +
+    theme_bw() +
+    theme(legend.position='none',
+          plot.title = element_text(hjust = 0.5)) 
+```
+ 
