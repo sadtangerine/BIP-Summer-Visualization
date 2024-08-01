@@ -8,7 +8,9 @@ Materials for the Black in Psych (BIP) Summer Data Visualization Series in R.  T
 - Take-home worksheet answer key
 
 ## July 23rd workshop:
-
+- Penguins Demo (Plotting Bar Plots, Histograms, and Boxplots ; go over advance ggplot techniques)
+- Slides
+  
 ## Additional Resources:  
 [The R Graph Gallery](https://r-graph-gallery.com/)  
 [R Color Palette Finder](https://r-graph-gallery.com/color-palette-finder)  
