@@ -10,6 +10,7 @@ Materials for the Black in Psych (BIP) Summer Data Visualization Series in R.  T
 ## July 23rd workshop:
 - [Penguins Demo](https://github.com/sadtangerine/BIP-Summer-Visualization/blob/main/Data-Viz-Workshop-2-Penguins.html) (Plotting Bar Plots, Histograms, and Boxplots ; go over advance ggplot techniques)  
       You can view the htlm file by going to the git repository, find the RMarkdown *.html file, click “View raw” and copy-paste the raw html URL to [GitHub & BitBucket HTML Preview](https://htmlpreview.github.io/).
+     The markdown file can also be found [here](https://github.com/sadtangerine/BIP-Summer-Visualization/blob/main/Data%20Viz%20Workshop%202%20Penguins.Rmd).
 
 - [Slides](https://github.com/sadtangerine/BIP-Summer-Visualization/blob/main/Data%20Viz%20Workshop%202.pdf)
   
