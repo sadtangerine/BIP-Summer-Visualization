@@ -6,6 +6,7 @@ Materials for the Black in Psych (BIP) Summer Data Visualization Series in R.  T
 - [Rmd File of Anscombe code](https://github.com/sadtangerine/BIP-Summer-Visualization/blob/main/Anscombe_Workshop_DEMO.Rmd)
 - [Take-home worksheet](https://github.com/sadtangerine/BIP-Summer-Visualization/blob/main/Workshop%20TakeHome.Rmd) (download the raw file)
 - [Take-home worksheet answer key rmd file](https://github.com/sadtangerine/BIP-Summer-Visualization/blob/main/Workshop%20TakeHome_KEY.Rmd)
+  You can also see the html preview [here](https://htmlpreview.github.io/?https://github.com/sadtangerine/BIP-Summer-Visualization/blob/main/Workshop-TakeHome_KEY.html).
 
 ## July 23rd workshop:
 - [Penguins Demo](https://github.com/sadtangerine/BIP-Summer-Visualization/blob/main/Data-Viz-Workshop-2-Penguins.html) (Plotting Bar Plots, Histograms, and Boxplots ; go over advance ggplot techniques)  
