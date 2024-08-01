@@ -1,0 +1,609 @@
+---
+title: "An In-Depth Exploration of Advanced Data Visualization Techniques with R - Penguins DEMO"
+author: "Ketura Elie"
+date: "2024-07-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+
+## Palmerpenguins
+
+```{r, eval=FALSE}
+install.packages("palmerpenguins")
+```
+
+```{r}
+library(palmerpenguins)
+```
+
+```{r}
+head(penguins)
+```
+
+```{r}
+str(penguins)
+```
+
+```{r}
+penguins %>% 
+    group_by(species) %>% 
+    summarize(across(where(is.numeric), mean, na.rm = TRUE))
+```
+
+
+## Factors
+
+It is important to know the functionality of factors as they help with visualizing what we would refer to as categorical data.
+
+```{r, eval=FALSE}
+## This code produces an error because we cannot plot a "character" variable
+penguins %>% 
+    mutate(species = as.character(species)) %>% 
+    ggplot(x = species) +
+    geom_bar()
+```
+
+
+
+
+## Bar plot
+
+We will map the categorical variable to the `x` aesthetic.  
+
+The `y` aesthetic will be mapped to a **DERIVED** quantity.  
+
+But we must perform a **STATISTICAL TRANSFORMATION** before we can create the bar chart.  
+
+We will first manually perform the counting and map the aesthetics appropriately.    
+
+A bar chart can be made withe `geom_col()` function. Work with the `class()` column first.  
+Create a VERTICAL bar chart by mapping the variable to the `x` aesthetic.
+
+```{r,eval=FALSE}
+count(species)
+```
+
+We can create a bar plot with `geom_col` and that requires both an `x` and `y` aesthetic. 
+
+```{r}
+penguins %>% 
+    count(species) %>% 
+    ggplot(aes(x = species, y = n)) +
+    geom_col() +
+    theme_bw()
+```
+
+```{r}
+penguins %>% 
+    count(species) %>% 
+    filter(species %in% c("Gentoo", "Adelie")) %>% 
+    ggplot(aes(x = species, y = n)) +
+    geom_col() +
+    theme_bw()
+```
+
+There are multiple ways to create the bar chart. We could also use the `geom_bar()` function.  
+
+```{r}
+penguins %>% 
+    count(species) %>% 
+    ggplot(aes(x = species, y = n)) +
+    geom_bar(stat = 'identity') +
+    theme_bw()
+```
+
+The reason we need the `stat` argument in `geom_bar()` is because BEHIND the scenes `geom_bar()` wants to execute the STATISTICAL TRANSFORMATION for us. 
+
+
+
+```{r}
+penguins %>%  
+    ggplot(aes(x = species)) + ## Note here, there is no manual statistical transformation/computing
+    geom_bar() +
+    theme_bw()
+```
+
+The importance of this difference can come in handy if you have to (or want to) do statistical calculations/computations
+
+```{r, eval=FALSE}
+## this creates an error because we cannot use `geom_bar()` as is if we supply a `y` aesthetic within the parent call
+penguins %>% 
+    group_by(species) %>% 
+    summarize(across(where(is.numeric), mean, na.rm = TRUE)) %>% 
+    pivot_longer(cols = -c(species)) %>% 
+    ggplot(aes(x = name, y = value)) +
+    geom_bar() +
+    theme_bw()
+```
+
+
+```{r}
+penguins %>% 
+    group_by(species) %>% 
+    summarize(across(where(is.numeric), mean, na.rm = TRUE)) %>% 
+    pivot_longer(cols = -c(species)) %>% 
+    filter(!name %in% c("body_mass_g", "year")) %>% 
+    ggplot(aes(x = name, y = value)) +
+    geom_bar(stat = "identity") +
+    theme_bw()
+```
+
+Back to our factor of species...
+We can change the factor level order as needed.  
+
+```{r}
+penguins %>% 
+    select(species) %>% 
+    pull() %>% 
+    levels()
+```
+
+But maybe, would like to order base on the counts.  
+
+
+```{r}
+penguins %>% 
+    count(species) %>% 
+    arrange(n)
+```
+```{r}
+penguins %>% 
+    count(species) %>% 
+    arrange(desc(n))
+```
+
+We can even use packages like `forcats` to help manipulate factor dataypes.
+
+```{r}
+penguins %>% 
+    mutate(class = forcats::fct_infreq(species)) %>% ## factor in frequency order
+    select(species) %>% 
+    pull() %>% 
+    levels()
+```
+
+```{r}
+penguins %>% 
+    mutate(class = forcats::fct_infreq(species)) %>% ## Note this is *not* a statistical transformation
+    ggplot(aes(x = class)) +
+    geom_bar() +
+    theme_bw()
+```
+
+We can do it the reverse order as well
+
+```{r}
+penguins %>% 
+    mutate(class = forcats::fct_infreq(species)) %>%
+    mutate(class = forcats::fct_rev(class)) %>% 
+    ggplot(aes(x = class)) +
+    geom_bar() +
+    theme_bw()
+```
+
+We can also use bar charts to show proportions!
+
+```{r}
+penguins%>% 
+    count(species) %>% 
+    mutate (proportion = n/sum(n)) %>%  ## note this *is* a statistical transformation
+    ggplot(aes(x = species, y = proportion)) +
+    # geom_bar(stat = 'identity') + 
+    geom_col() +
+    theme_bw()
+```
+
+
+## Histograms
+
+We want to use histograms to look at distributions of our data.
+
+```{r}
+penguins %>% 
+    drop_na(bill_length_mm) %>% 
+    summarise(mean(bill_length_mm),
+              sd(bill_length_mm),
+              min(bill_length_mm),
+              max(bill_length_mm))
+```
+
+On a very "basic" levels, or behind the scences, histograms are similar to bar plots. We can even create a histogram using the bar geom.
+
+```{r}
+penguins %>% 
+  drop_na(bill_length_mm) %>% 
+  mutate(x_bin = cut(bill_length_mm,
+                     breaks = seq(min(bill_length_mm), max(bill_length_mm), length.out = 6),
+                     include.lowest = TRUE)) %>% 
+  ggplot(mapping = aes(x = x_bin)) +
+  geom_bar(mapping = aes(y = stat(prop),
+                         group = 1)) +
+  theme_bw()
+```
+
+We executed the binning or *cutting* of the continuous variable in the previous figures. The intent was was to demonstrate all steps necessary to create a **histogram**. Histograms are graphical tools for visualizing the distributions of continuous variables. They are created by first performing the following **statistical transformation**:  
+
++ Cut the continuous variable into finite bins  
++ Count the number of observations (rows) associated with each bin  
+
+The histogram is then visualized has a bar chart where the height of the bar shows the count in each bin.  
+However, we do not have to manually execute these steps in practice. The `geom_histogram()` function performs the *statistical transformation* and then visualizes the aesthetics using bars! The previous examples were created manually to demonstrate how histograms are created and how to interpret them.  
+
+Since `geom_histogram()` performs the **statistical transformation** for us, we only need to provide a single aesthetic when we create the histogram. The continuous variable of interest is mapped to the `x` aesthetic to create the conventional histogram. The code chunk below creates the histogram using the default arguments to `geom_histogram()`.  
+
+
+```{r}
+penguins %>% 
+    ggplot(aes(x = bill_length_mm)) +
+    geom_histogram() +
+    theme_bw()
+```
+
+There are a few important things to note about the above figure. First, the `ggplot2` default number of bins is 30. The warning message displayed to the screen tells us that. Remember `ggplot2` does not like hide assumptions. Thus, if we do not set the number of bins, `ggplot2` tells us the value it used. Second, the warning message reminds us that a statistical transformation is executed to create the figure. The `stat_bin()` function called behind the scenes to execute the **statistical transformation** and the **derived** counts are then displayed appropriately as a bar chart. We can thus make the same figure by calling the `stat_bin()` function with `geom = 'bar'` (the default geom for `stat_bin()`). The figure below is identical to the previous figure.  
+
+```{r}
+penguins %>% 
+    ggplot(mapping = aes(x = bill_length_mm)) +
+    stat_bin(geom = 'bar') +
+    theme_bw()
+```
+
+Lastly, notice that in the previous two histograms the x-axis is **NOT** categorical. The bins are displayed on a continuous x-axis because the variable is continuous! The `geom_histogram()` function is thus a better choice than us manually creating the figure because `ggplot2` makes sure the axis is structured and labeled correctly.  
+
+Let's modify the colors of the histogram. As you can see, by default the histogram is filled in with a grey/black color. Like bar charts, histograms have the color *filled* in an area. Thus, the bar `fill` aesthetic changes the area color. The code chunk below changes the bar `fill` to a light blue.  
+
+```{r}
+penguins %>% 
+    ggplot(mapping = aes(x = bill_length_mm)) +
+    geom_histogram(fill = 'dodgerblue') +
+    theme_bw()
+```
+
+
+
+
+A brief note about condtional distributions
+
+A **conditional distribution** conditions on the value of another variable. Conditioning on a categorical variable is analogous to *grouping by* the categorical variable. Our first conditional distribution visualization will be the histogram **conditioned on** the categorical variable `species`. 
+
+Although we can use histograms to visualize this, we must be careful when creating the conditional histogram! As discussed in the introduction to conditional distributions report, *count* histograms are impacted by the sample size! Thus, we cannot use the default histogram arguments!  
+
+However, before creating the correct figure, let's first make the incorrect figure which does not correctly adjust based on the sample size per group. The figure below uses the histogram bar `fill` to group by or *condition on* the `species` variable.  
+
+```{r}
+penguins %>% 
+  ggplot(mapping = aes(x = bill_length_mm)) +
+  geom_histogram(mapping = aes(fill = species),
+                 bins = 11) +
+  theme_bw()
+```
+
+Alternatively, we could use the histogram bar `color` for the grouping. The `linewidth` argument is set to make the bar border or edge `color` thicker and easier to see.  
+
+```{r}
+penguins %>% 
+  ggplot(mapping = aes(x = bill_length_mm)) +
+  geom_histogram(mapping = aes(color = species),
+                 bins = 11,
+                 linewidth = 2) +
+  theme_bw()
+```
+
+Let's make a cleaner figure.
+
+```{r}
+penguins %>% 
+    ggplot(aes(x = bill_length_mm)) +
+    geom_histogram(aes(color = species,
+                       fill = species),
+                   linewidth = .2,
+                   alpha = 0.5,
+                   bins = 30) +
+    theme_bw()
+```
+
+
+Finally, whether we use bar `fill` or `color` we could dodge the position of the histograms. Dodging should **only** be used with histograms if the categorical variable has 3 or fewer levels. The bars become to thin otherwise.  
+
+```{r}
+penguins %>% 
+  ggplot(mapping = aes(x = bill_length_mm)) +
+  geom_histogram(mapping = aes(fill = species),
+                 bins = 11,
+                 position = 'dodge') +
+  theme_bw()
+```
+
+
+## Boxplots 
+The conditional distribution figures shown previously can be interpreted as studying how a continuous variable **changes** across the levels or categories of a categorical variable. Thus, **we can use conditional distributions to study the relationship between a continuous and categorical variable**. However, the previous figures do not show the changing distributions *side-by-side*. Summarizing the conditional distributions side-by-side can help focus our attention on changes due to the categorical variable.  
+
+Boxplots summarize the data to focus on the useful Quantiles. The boxplot is created by the `geom_boxplot()` function with primary aesthetics of `x` and `y`. The categorical variable is the `x` aesthetic and the continuous variable is the `y` aesthetic.
+
+```{r}
+penguins %>% 
+    ggplot(aes(x = species, y = bill_length_mm)) +
+    geom_boxplot() +
+    theme_bw()
+```
+
+The boxplot includes `fill` and `color` aesthetics. The `fill` aesthetic is the area fill of the box. The `color` aesthetic is the box edge color, whisker color, and outlier marker color. 
+
+```{r}
+penguins %>% 
+    ggplot(aes(x = species, y = bill_length_mm)) +
+    geom_boxplot(mapping = aes(fill = species,
+                             color = species),
+                 alpha = 0.2,
+                 size = 1) +
+    theme_bw()
+```
+
+The boxplot focuses on Quantiles. However, we may also want to show the conditional mean or average. The `stat_summary()` function can execute many different kinds of summarizing operations.
+
+First we can just plot the averages.
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  stat_summary(fun.data = 'mean_se') +
+  theme_bw()
+```
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  stat_summary(fun.data = 'mean_se',
+               fun.args = list(mult = 2)) +
+  theme_bw()
+```
+
+If we want to visualize boxplot with averages, we just add the boxplot geom on top
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  geom_boxplot(mapping = aes(fill = species,
+                             color = species),
+               alpha = 0.2,
+               size = .15) +
+  stat_summary(fun.data = 'mean_se',
+               fun.args = list(mult = 2),
+               mapping = aes(color = species)) +
+  theme_bw()
+```
+
+However, sometimes the colors can make it difficult to see the averages on top of the boxes. Thus, it can be useful in the composite graphic to use the default boxplot fill and colors with a red marker and line for the average.  
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  geom_boxplot(mapping = aes(fill = species,
+                             color = species),
+               alpha = 0.2,
+               size = .15) +
+  stat_summary(fun.data = 'mean_se',
+               fun.args = list(mult = 2),
+               color = 'red') +
+  theme_bw()
+```
+
+## Scales
+
+Both `scale_color` and `scale_fill`  work similarly to `color` and `fill`. However, the scales require that your fill and color aesthetics are mapped onto a variable. 
+
+```{r}
+pal <- c("#FF8C00", "#A034F0", "#159090")
+```
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  geom_boxplot(mapping = aes(fill = species,
+                             color = species),
+               alpha = .9,
+               size = .15) + 
+  scale_fill_manual(name = "species", values = pal) +
+  theme_bw()
+```
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  geom_boxplot(mapping = aes(fill = species,
+                             color = species),
+               alpha = .9,
+               size = .15) + 
+  scale_fill_manual(name = "species", 
+                    values = c("#FF8C00", "#A034F0", "#159090")) +
+  theme_bw()
+```
+
+
+## Themes
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  geom_boxplot(mapping = aes(fill = forcats::fct_infreq(species),
+                             color = forcats::fct_infreq(species)),
+               alpha = .9,
+               size = .15) + 
+  scale_fill_manual(values = c("#FF8C00", "#A034F0", "#159090")) +
+  theme_bw()
+```
+
+We can use `labs` to clean up our plot
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  geom_boxplot(mapping = aes(fill = forcats::fct_infreq(species),
+                             color = forcats::fct_infreq(species)),
+               alpha = .9,
+               size = .15) + 
+  scale_fill_manual(values = c("#FF8C00", "#A034F0", "#159090")) +
+  labs(fill = "Species",
+       color = "Species") +
+  theme_bw()
+```
+
+Moving the legend
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  geom_boxplot(mapping = aes(fill = forcats::fct_infreq(species),
+                             color = forcats::fct_infreq(species)),
+               alpha = .9,
+               size = .15) + 
+  scale_fill_manual(values = c("#FF8C00", "#A034F0", "#159090")) +
+  labs(fill = "Species",
+       color = "Species") +
+  theme_bw() +
+  theme(legend.position = "top")
+```
+
+
+If you don't want the __title__ of your legend to show at all, you can use `NULL` 
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  geom_boxplot(mapping = aes(fill = forcats::fct_infreq(species),
+                             color = forcats::fct_infreq(species)),
+               alpha = .9,
+               size = .15) + 
+  scale_fill_manual(values = c("#FF8C00", "#A034F0", "#159090")) +
+  labs(fill = NULL,
+       color = NULL) +
+  theme_bw()
+```
+
+If you wanted to remove the legend all together, you can use `guides`
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  geom_boxplot(mapping = aes(fill = forcats::fct_infreq(species),
+                             color = forcats::fct_infreq(species)),
+               alpha = .9,
+               size = .15) + 
+  scale_fill_manual(values = c("#FF8C00", "#A034F0", "#159090")) +
+  guides(fill = "none",
+         color = "none") +
+  theme_bw()
+```
+
+Final clean up 
+
+```{r}
+penguins %>% 
+  ggplot(aes(x = species, y = bill_length_mm)) +
+  geom_boxplot(mapping = aes(fill = forcats::fct_infreq(species),
+                             color = forcats::fct_infreq(species)),
+               alpha = .9,
+               size = .15) + 
+  scale_fill_manual(values = c("#FF8C00", "#A034F0", "#159090")) +
+  guides(fill = "none",
+         color = "none") +
+  labs(title = "Average Bill Length by Species",
+       x = "Species",
+       y = "Bill Length in mm") +
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = .5))
+```
+
+## Alternative palettes from R
+If you don't have custom colors to use, you can use palettes that comes with R and ggplot. The semantic of the code is the same with using the `scale_` function. Below is an example of using the [*Brewer Palette* ](https://r-graph-gallery.com/38-rcolorbrewers-palettes.html) by calling `scale_fill_brewer`. 
+
+```{r}
+penguins %>% 
+    ggplot(aes(x = species, y = bill_length_mm)) +
+    geom_boxplot(mapping = aes(fill = species),
+                 alpha = .9,
+                 size = .15) +
+    scale_fill_brewer(palette = "Set1") +
+    labs(title = "Average Bill Length by Species",
+         x = "Species",
+         y = "Bill Length in mm",
+         fill = "Species:") +
+    theme_bw() +
+    theme(plot.title = element_text(hjust = .5),
+          legend.position = "bottom")
+
+```
+
+**Note**: For palettes that come with R like brewer or [Viridis](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html), it matters what your variable type is to use some of the palettes. For example, with viridis, there are different subtypes (viridis_b, viridis_d, and viridis_c) and each apply to a specific variable type. If you tried to color a continuous variable with viridis_d, R you spit out an error because the variable you are trying to display in your plot is not consistent with the variable type that this subtype needs. So keep in mind what your variable type is when you call these R palettes!. 
+
+## Changing legend names 
+
+You can change name that appears in your legend (not just the legend title but the contents of your legend). Here were are still using the `scale_` function and within it we are value the `labels` call to change the content of our legend. Just make sure that if you are using both `scale_fill_` and `scale_color`, you need to change the `labels` to match exactly!. 
+
+```{r}
+penguins %>% 
+    ggplot(aes(x = species, y = bill_length_mm)) +
+    geom_boxplot(mapping = aes(fill = forcats::fct_infreq(species),
+                               color = forcats::fct_infreq(species)),
+                 alpha = .9,
+                 size = .15) +
+    scale_fill_manual(values = pal,
+                      labels = c("Patrick",
+                                 "Elie",
+                                 "Dave")) +
+    scale_color_manual(values = pal,
+                      labels = c("Patrick",
+                                 "Elie",
+                                 "Dave")) +
+    labs(fill = "Species",
+         color = "Species") +
+    theme_bw()
+```
+
+
+**Note** you can do this change of legend even with R palettes like `scale_color_brewer` and `scale_fill_brewer`. Again all you need is the `labels` call within this function call. An example code is provided below. 
+
+```{r}
+penguins %>% 
+    ggplot(aes(x = species, y = bill_length_mm)) +
+    geom_boxplot(mapping = aes(fill = forcats::fct_infreq(species),
+                               color = forcats::fct_infreq(species)),
+                 alpha = .9,
+                 size = .15) +
+    scale_fill_brewer(palette = "Set1",
+                      labels = c("Patrick",
+                                 "Elie",
+                                 "Dave")) +
+    scale_color_brewer(palette = "Set1",
+                      labels = c("Patrick",
+                                 "Elie",
+                                 "Dave")) +
+    labs(fill = "Species",
+         color = "Species") +
+    theme_bw()
+```
+```
+
+
+## Extra
+
+Showing full axis
+
+```{r}
+penguins %>% 
+    ggplot(aes(x = bill_length_mm, y = bill_depth_mm)) +
+    geom_point() +
+    theme_bw() +
+    coord_cartesian(xlim = c(50,60))
+```
+
+
+**Author's Note**: I hope this document has been helpful in learning some advance elements of ggplot! Please let me know if you have any questions or feedback at ane48@pitt.edu.
